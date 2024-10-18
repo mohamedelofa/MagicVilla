@@ -82,14 +82,6 @@ namespace MagicVilla_VillaAPI.Controllers
             villa.Id = id;
             villa.CreatedDate = createAt;
             villa.UpdatedDate = DateTime.Now;
-            //villa.Name = model.Name;
-            //villa.Rate = model.Rate;
-            //villa.UpdatedDate = DateTime.Now;
-            //villa.Amenity = model.Amenity;
-            //villa.Sqft = model.Sqft;
-            //villa.Details = model.Details;
-            //villa.ImageUrl = model.ImageUrl;
-            //villa.Occupancy = model.Occupancy;
             _context.Villas.Update(villa);
             await _context.SaveChangesAsync();
             return NoContent();
