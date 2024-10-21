@@ -1,7 +1,3 @@
-
-using MagicVilla_VillaAPI.Data;
-using Microsoft.EntityFrameworkCore;
-
 namespace MagicVilla_VillaAPI
 {
     public class Program
@@ -11,9 +7,11 @@ namespace MagicVilla_VillaAPI
             var builder = WebApplication.CreateBuilder(args);
 
             // Add services to the container.
-            var ConnectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-                ?? throw new InvalidOperationException("Error in connection string");
-            builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(ConnectionString));
+            builder.Services.AddDbContext<AppDbContext>(
+                options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")
+                ?? throw new InvalidOperationException("Error in connection string"))
+                );
+            builder.Services.AddScoped<IVillaRepository, VillaRepository>();
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();

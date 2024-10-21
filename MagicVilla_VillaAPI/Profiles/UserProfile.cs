@@ -1,8 +1,4 @@
-﻿using AutoMapper;
-using MagicVilla_VillaAPI.Models;
-using MagicVilla_VillaAPI.Models.Dtos;
-
-namespace MagicVilla_VillaAPI.Profiles
+﻿namespace MagicVilla_VillaAPI.Profiles
 {
     public class UserProfile :Profile
     {
