@@ -1,7 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using System.Net;
-
-namespace MagicVilla_VillaAPI.Controllers
+﻿namespace MagicVilla_VillaAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -30,7 +27,7 @@ namespace MagicVilla_VillaAPI.Controllers
             catch (Exception ex)
             {
                 response.IsSuccess = false;
-                response.Errors = new List<string> { ex.Message };
+                response.Errors.Add(ex.Message);
             }
             return response;
         }
@@ -45,16 +42,16 @@ namespace MagicVilla_VillaAPI.Controllers
             {
                 response.IsSuccess = false;
                 response.StatusCode = HttpStatusCode.BadRequest;
-                return response;
+                return BadRequest(response);
             }
             try
             {
-                var villa = await _villaRepository.Get(v => v.Id == id, false);
+                var villa = await _villaRepository.GetAsync(v => v.Id == id, false);
                 if (villa is null)
                 {
                     response.IsSuccess = false;
                     response.StatusCode=HttpStatusCode.NotFound;
-                    return response;
+                    return NotFound(response);
                 }
                 response.IsSuccess = true;
                 response.StatusCode = HttpStatusCode.OK;
@@ -63,25 +60,25 @@ namespace MagicVilla_VillaAPI.Controllers
             catch (Exception ex)
             {
                 response.IsSuccess = false;
-                response.Errors = new List<string> { ex.ToString() };
+                response.Errors.Add(ex.Message);
             }
             return response;
         }
 
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(Villa))]
+        [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<ActionResult<ApiResponse>> Create(CreateUpdateVillaDto model)
         {
+            if (model is null)
+            {
+                response.IsSuccess = false;
+                response.StatusCode = HttpStatusCode.BadRequest;
+                return response;
+            }
             try
             {
-                if (model is null)
-                {
-                    response.IsSuccess = false;
-                    response.StatusCode = HttpStatusCode.BadRequest;
-                    return response;
-                }
                 Villa villa = _mapper.Map<Villa>(model);
                if (await _villaRepository.CreateAsync(villa) == true)
                 {
@@ -99,7 +96,7 @@ namespace MagicVilla_VillaAPI.Controllers
             catch (Exception ex)
             {
                 response.IsSuccess = false;
-                response.Errors = new List<string> { ex.Message };
+                response.Errors.Add(ex.Message);
             }
             return response;
         }
@@ -119,7 +116,7 @@ namespace MagicVilla_VillaAPI.Controllers
             }
             try
             {
-                Villa? villa = await _villaRepository.Get(v => v.Id == id, true);
+                Villa? villa = await _villaRepository.GetAsync(v => v.Id == id, true);
                 if (villa is null)
                 {
                     response.IsSuccess = false;
@@ -140,7 +137,7 @@ namespace MagicVilla_VillaAPI.Controllers
             catch(Exception ex)
             {
                 response.IsSuccess = false;
-                response.Errors = new List<string> { ex.Message };
+                response.Errors.Add(ex.Message);
             }
             return response;
         }
@@ -160,7 +157,7 @@ namespace MagicVilla_VillaAPI.Controllers
             }
             try
             {
-                Villa? villa = await _villaRepository.Get(v => v.Id == id, false);
+                Villa? villa = await _villaRepository.GetAsync(v => v.Id == id, false);
                 if (villa is null)
                 {
                     response.IsSuccess = false;
@@ -185,7 +182,7 @@ namespace MagicVilla_VillaAPI.Controllers
             catch (Exception ex)
             {
                 response.IsSuccess = false;
-                response.Errors = new List<string> { ex.Message };
+                response.Errors.Add(ex.Message);
             }
             return response;
         }

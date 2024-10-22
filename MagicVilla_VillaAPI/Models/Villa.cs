@@ -1,7 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace MagicVilla_VillaAPI.Models
+﻿namespace MagicVilla_VillaAPI.Models
 {
     public class Villa
     {
@@ -17,5 +14,6 @@ namespace MagicVilla_VillaAPI.Models
         public string Amenity { get; set; } = null!;
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }
+        public List<VillaNumber>? VillaNumbers { get; set; }
     }
 }

@@ -25,7 +25,7 @@ namespace MagicVilla_VillaAPI.Repository.implementation
             return await SaveAsync();
         }
 
-        public async Task<T?> Get(Expression<Func<T, bool>> filter , bool tracked)
+        public async Task<T?> GetAsync(Expression<Func<T, bool>> filter , bool tracked)
         {
             if(tracked)
                 return await _db.FirstOrDefaultAsync(filter);

@@ -1,8 +1,8 @@
 ﻿namespace MagicVilla_VillaAPI.Profiles
 {
-    public class UserProfile :Profile
+    public class VillaProfile :Profile
     {
-        public UserProfile()
+        public VillaProfile()
         {
             CreateMap<Villa, GetVillaDto>();
 
