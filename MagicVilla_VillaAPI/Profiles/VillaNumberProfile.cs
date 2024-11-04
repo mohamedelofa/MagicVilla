@@ -8,9 +8,6 @@
             CreateMap<CreateVillaNumberDto, VillaNumber>().ForMember(
                     dest => dest.CreatedDate,
                     src => src.MapFrom(v => DateTime.Now)
-                ).ForMember(
-                    dest => dest.VillNo,
-                    src => src.MapFrom(v => v.VillNo)
                 );
             CreateMap<UpdateVillaNumberDto, VillaNumber>().ForMember(
                     dest => dest.UpdatedDate,

@@ -3,7 +3,7 @@
     public class BaseVillaNumberDto
     {
         [Required]
-        public int VillNo { get; set; }
+        public int VillaNo { get; set; }
         [Required]
         public int VillaId { get; set; }
         [Required]

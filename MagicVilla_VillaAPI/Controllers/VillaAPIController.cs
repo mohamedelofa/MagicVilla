@@ -79,6 +79,13 @@
             }
             try
             {
+                if(await _villaRepository.GetAsync(v => v.Name.ToLower() == model.Name.ToLower() , false) is not null)
+                {
+                    response.IsSuccess = false;
+                    response.Errors.Add("Villa Already Exist");
+                    response.StatusCode = HttpStatusCode.BadRequest;
+                    return response;
+                }
                 Villa villa = _mapper.Map<Villa>(model);
                if (await _villaRepository.CreateAsync(villa) == true)
                 {

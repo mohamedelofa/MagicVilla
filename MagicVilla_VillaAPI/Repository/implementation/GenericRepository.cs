@@ -25,17 +25,33 @@ namespace MagicVilla_VillaAPI.Repository.implementation
             return await SaveAsync();
         }
 
-        public async Task<T?> GetAsync(Expression<Func<T, bool>> filter , bool tracked)
+        public async Task<T?> GetAsync(Expression<Func<T, bool>> filter , bool tracked , string? includeProperties = null)
         {
+            IQueryable<T> query = _db;
+            if(includeProperties is not null)
+            {
+                foreach(var property in includeProperties.Split(',' , StringSplitOptions.RemoveEmptyEntries & StringSplitOptions.TrimEntries))
+                {
+                    query = query.Include(property);
+                }
+            }
             if(tracked)
-                return await _db.FirstOrDefaultAsync(filter);
-            return await _db.AsNoTracking().FirstOrDefaultAsync(filter);
+                return await query.FirstOrDefaultAsync(filter);
+            return await query.AsNoTracking().FirstOrDefaultAsync(filter);
         }
 
-        public Task<List<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null)
+        public Task<List<T>> GetAllAsync(Expression<Func<T, bool>>? filter = null , string? includeProperties = null)
         {
-            if (filter is not null) return _db.Where(filter).ToListAsync();
-            return _db.ToListAsync();
+            IQueryable<T> query = _db;
+			if (includeProperties is not null)
+			{
+				foreach (var property in includeProperties.Split(',', StringSplitOptions.RemoveEmptyEntries))
+				{
+					query = query.Include(property);
+				}
+			}
+			if (filter is not null) return query.Where(filter).ToListAsync();
+            return query.ToListAsync();
         }
 
         public virtual async Task<bool> UpdateAsync(T entity)

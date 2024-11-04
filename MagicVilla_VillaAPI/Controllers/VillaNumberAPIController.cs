@@ -27,7 +27,7 @@ namespace MagicVilla_VillaAPI.Controllers
         {
             try
             {
-                var VillaNumbers = await _villaNumberRepository.GetAllAsync();
+                var VillaNumbers = await _villaNumberRepository.GetAllAsync(includeProperties:"Villa");
                 Response.Result = _mapper.Map<List<GetVillaNumberDto>>(VillaNumbers);
                 Response.StatusCode = HttpStatusCode.OK;
                 Response.IsSuccess = true;
@@ -54,7 +54,7 @@ namespace MagicVilla_VillaAPI.Controllers
             }
             try
             {
-                var villaNumber = await _villaNumberRepository.GetAsync(v => v.VillNo == number, false);
+                var villaNumber = await _villaNumberRepository.GetAsync(v => v.VillaNo == number, false , includeProperties:"Villa");
                 if (villaNumber is null)
                 {
                     Response.IsSuccess = false;
@@ -87,7 +87,7 @@ namespace MagicVilla_VillaAPI.Controllers
             }
             try
             {
-                if(await _villaNumberRepository.GetAsync(v => v.VillNo == model.VillNo , false) is not null)
+                if(await _villaNumberRepository.GetAsync(v => v.VillaNo == model.VillaNo , false) is not null)
                 {
                     Response.IsSuccess = false;
                     Response.StatusCode=HttpStatusCode.BadRequest;
@@ -107,7 +107,7 @@ namespace MagicVilla_VillaAPI.Controllers
                     Response.IsSuccess = true;
                     Response.StatusCode = HttpStatusCode.Created;
                     Response.Result = model;
-                    return CreatedAtAction(nameof(GetByNo), new { number = villaNumber.VillNo }, Response);
+                    return CreatedAtAction(nameof(GetByNo), new { number = villaNumber.VillaNo }, Response);
                 }
                 else
                 {
@@ -143,7 +143,7 @@ namespace MagicVilla_VillaAPI.Controllers
             }
             try
             {
-                var villaNumber = await _villaNumberRepository.GetAsync(v => v.VillNo == number, true);
+                var villaNumber = await _villaNumberRepository.GetAsync(v => v.VillaNo == number, true);
                 if (villaNumber is null)
                 {
                     Response.IsSuccess = false;
@@ -195,7 +195,7 @@ namespace MagicVilla_VillaAPI.Controllers
                     Response.StatusCode = HttpStatusCode.BadRequest;
                     return BadRequest(Response);
                 }
-                var villaNumber = await _villaNumberRepository.GetAsync(v => v.VillNo == number,false);
+                var villaNumber = await _villaNumberRepository.GetAsync(v => v.VillaNo == number,false);
                 if (villaNumber is null)
                 {
                     Response.IsSuccess = false;
@@ -205,7 +205,7 @@ namespace MagicVilla_VillaAPI.Controllers
                 DateTime Create = villaNumber.CreatedDate;
                 villaNumber = _mapper.Map<VillaNumber>(model);
                 villaNumber.CreatedDate = Create;
-                villaNumber.VillNo = number;
+                villaNumber.VillaNo = number;
                 if(await _villaNumberRepository.UpdateAsync(villaNumber) == true)
                 {
                     Response.IsSuccess = true;

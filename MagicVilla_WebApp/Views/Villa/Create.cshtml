@@ -1,0 +1,101 @@
+﻿@model CreateVillaDto
+
+<div class="container border shadow mt-5 p-3">
+	<div class="text-center p-3">
+		<h2 class="text-info">Create New Villa</h2>
+	</div>
+	<div>
+		<form asp-action="Create" method="post" class="row">
+			<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+			<div class="mb-3 row">
+				<div class="col-2">
+					<label asp-for="Name"></label>
+				</div>
+				<div class="col-10">
+					<input asp-for="Name" class="form-control" />
+					<span asp-validation-for="Name" class="text-danger"></span>
+				</div>
+			</div>
+
+			<div class="mb-3 row">
+				<div class="col-2">
+					<label asp-for="Occupancy"></label>
+				</div>
+				<div class="col-10">
+					<input asp-for="Occupancy" class="form-control" />
+					<span asp-validation-for="Occupancy" class="text-danger"></span>
+				</div>
+			</div>
+
+
+			<div class="mb-3 row">
+				<div class="col-2">
+					<label asp-for="Rate"></label>
+				</div>
+				<div class="col-10">
+					<input asp-for="Rate" class="form-control" />
+					<span asp-validation-for="Rate" class="text-danger"></span>
+				</div>
+			</div>
+
+
+			<div class="mb-3 row">
+				<div class="col-2">
+					<label asp-for="Sqft"></label>
+				</div>
+				<div class="col-10">
+					<input asp-for="Sqft" class="form-control" />
+					<span asp-validation-for="Sqft" class="text-danger"></span>
+				</div>
+
+			</div>
+
+			<div class="mb-3 row">
+				<div class="col-2">
+					<label asp-for="Amenity"></label>
+				</div>
+				<div class="col-10">
+					<textarea asp-for="Amenity" class="form-control"></textarea>
+					<span asp-validation-for="Amenity" class="text-danger"></span>
+				</div>
+			</div>
+
+
+			<div class="mb-3 row">
+				<div class="col-2">
+					<label asp-for="Details"></label>
+				</div>
+				<div class="col-10">
+					<textarea asp-for="Details" class="form-control"></textarea>
+					<span asp-validation-for="Details" class="text-danger"></span>
+				</div>
+			</div>
+
+
+			<div class="mb-3 row">
+				<div class="col-2">
+					<label asp-for="ImageUrl"></label>
+				</div>
+				<div class="col-10">
+					<input asp-for="ImageUrl" class="form-control"/>
+					<span asp-validation-for="ImageUrl" class="text-danger"></span>
+				</div>
+			</div>
+			
+
+			<div class="row justify-content-between">
+				<div class="col-4 offset-2">
+					<input type="submit" class="btn btn-primary form-control" value="Submit"/>
+				</div>
+				<div class="col-4">
+					<a class="btn btn-outline-warning form-control" asp-action="index">Back To List</a>
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+
+@section Scripts{
+	<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+	<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}

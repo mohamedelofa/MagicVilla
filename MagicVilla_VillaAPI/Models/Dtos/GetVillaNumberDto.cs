@@ -2,5 +2,6 @@
 {
     public class GetVillaNumberDto : BaseVillaNumberDto
     {
+        public GetVillaDto Villa  { get; set; }
     }
 }
