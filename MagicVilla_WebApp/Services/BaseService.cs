@@ -44,7 +44,6 @@ namespace MagicVilla_WebApp.Services
                 HttpResponseMessage responseMesssage = await client.SendAsync(message);
                 var responseContent = await responseMesssage.Content.ReadAsStringAsync();
                 return JsonConvert.DeserializeObject<ApiResponse>(responseContent);
-                //return APIResponse;
             }
             catch (Exception ex)
             {
@@ -53,9 +52,6 @@ namespace MagicVilla_WebApp.Services
                     IsSuccess = false,
                     Errors = new List<string>() { ex.Message }
                 };
-                //var result = JsonConvert.SerializeObject(response);
-                //var APIResponse = JsonConvert.DeserializeObject<T>(result);
-                //return APIResponse;
             }
         }
 
@@ -77,7 +73,7 @@ namespace MagicVilla_WebApp.Services
 		{
 			return await SendAsync(new ApiRequest()
 			{
-				apiType = StaticDetails.ApiType.DELETE,
+				apiType = ApiType.DELETE,
 				Url = $"{_url}/api/{endPoint}/{id}"
 			});
 		}
@@ -86,7 +82,7 @@ namespace MagicVilla_WebApp.Services
 		{
 			return await SendAsync(new ApiRequest()
 			{
-				apiType = StaticDetails.ApiType.GET,
+				apiType = ApiType.GET,
 				Url = $"{_url}/api/{endPoint}"
 			});
 		}
@@ -95,7 +91,7 @@ namespace MagicVilla_WebApp.Services
 		{
 			return await SendAsync(new ApiRequest()
 			{
-				apiType = StaticDetails.ApiType.GET,
+				apiType = ApiType.GET,
 				Url = $"{_url}/api/{endPoint}/{id}"
 			});
 		}
@@ -104,7 +100,7 @@ namespace MagicVilla_WebApp.Services
 		{
 			return await SendAsync(new ApiRequest()
 			{
-				apiType = StaticDetails.ApiType.PUT,
+				apiType = ApiType.PUT,
 				Data = dto,
 				Url = $"{_url}/api/{endPoint}/{id}"
 			});
