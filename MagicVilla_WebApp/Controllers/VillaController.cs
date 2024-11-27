@@ -3,6 +3,7 @@ using MagicVilla_WebApp.Models;
 using MagicVilla_WebApp.Models.Dtos;
 using MagicVilla_WebApp.Services;
 using MagicVilla_WebApp.Services.IServices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 
@@ -17,7 +18,7 @@ namespace MagicVilla_WebApp.Controllers
 		public async Task<IActionResult> Index()
         {
             List<GetVillaDto> villas = new List<GetVillaDto>();
-            ApiResponse? response = await _service.GetAllAsync(endPoint);
+            ApiResponse? response = await _service.GetAllAsync(endPoint , HttpContext.Session.GetString(StaticDetails.sessionTokenKey));
             if(response is not null && response.IsSuccess)
             {
                 villas = JsonConvert.DeserializeObject<List<GetVillaDto>>(Convert.ToString(response.Result));
@@ -25,17 +26,19 @@ namespace MagicVilla_WebApp.Controllers
             return View(villas);
         }
 
+		[Authorize]
         public IActionResult Create()
         {
             return View();
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Create(CreateVillaDto model)
         {
             if(ModelState.IsValid)
             {
-                ApiResponse? response = await _service.CreateAsync<CreateVillaDto>(model , endPoint);
+                ApiResponse? response = await _service.CreateAsync<CreateVillaDto>(model , endPoint , HttpContext.Session.GetString(StaticDetails.sessionTokenKey));
                 if(response is not null && response.IsSuccess)
                 {
 					TempData["Success"] = "Villa Created Successfully";
@@ -47,17 +50,18 @@ namespace MagicVilla_WebApp.Controllers
 					{
 						ModelState.AddModelError("", response?.Errors.FirstOrDefault() ?? " ");
 					}
+					TempData["Error"] = "Error encountered";
 				}
 			}
-			TempData["Error"] = "Error encountered";
 			return View(model);
         }
 
         [HttpGet]
+        [Authorize]
         public async Task<IActionResult> Update(int id)
         {
             if (id <= 0) return BadRequest();
-            ApiResponse? response = await _service.GetAsync(id , endPoint);
+            ApiResponse? response = await _service.GetAsync(id , endPoint , HttpContext.Session.GetString(StaticDetails.sessionTokenKey));
             if(response is not null && response.IsSuccess)
             {
                 var model = JsonConvert.DeserializeObject<GetVillaDto>(Convert.ToString(response.Result));
@@ -68,11 +72,12 @@ namespace MagicVilla_WebApp.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize]
         public async Task<IActionResult> Update(UpdateVillaDto model , int id)
         {
             if(ModelState.IsValid)
             {
-                ApiResponse? response = await _service.UpdateAsync<UpdateVillaDto>(model, id , endPoint);
+                ApiResponse? response = await _service.UpdateAsync<UpdateVillaDto>(model, id , endPoint , HttpContext.Session.GetString(StaticDetails.sessionTokenKey));
 				if (response is not null && response.IsSuccess)
 				{
 					TempData["Success"] = "Villa Updated Successfully";
@@ -84,18 +89,19 @@ namespace MagicVilla_WebApp.Controllers
 					{
 						ModelState.AddModelError("", response?.Errors.FirstOrDefault() ?? " ");
 					}
+					TempData["Error"] = "Error encountered";
 				}
 			}
-			TempData["Error"] = "Error encountered";
 			model.Id = id;
             return View(model);
         }
 
 		[HttpGet]
-		public async Task<IActionResult> Delete(int id)
+        [Authorize]
+        public async Task<IActionResult> Delete(int id)
 		{
 			if (id <= 0) return BadRequest();
-			ApiResponse? response = await _service.GetAsync(id , endPoint);
+			ApiResponse? response = await _service.GetAsync(id , endPoint , HttpContext.Session.GetString(StaticDetails.sessionTokenKey));
 			if (response is not null && response.IsSuccess)
 			{
 				var dto = JsonConvert.DeserializeObject<GetVillaDto>(Convert.ToString(response.Result));
@@ -106,9 +112,10 @@ namespace MagicVilla_WebApp.Controllers
 
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> Delete(GetVillaDto model)
+        [Authorize]
+        public async Task<IActionResult> Delete(GetVillaDto model)
 		{
-			ApiResponse? response = await _service.DeleteAsync(model.Id , endPoint);
+			ApiResponse? response = await _service.DeleteAsync(model.Id , endPoint , HttpContext.Session.GetString(StaticDetails.sessionTokenKey));
 			if (response is not null && response.IsSuccess)
 			{
 				TempData["Success"] = "Villa Deleted Successfully";
@@ -120,8 +127,8 @@ namespace MagicVilla_WebApp.Controllers
 				{
 					ModelState.AddModelError("", response.Errors.FirstOrDefault() ?? "");
 				}
+				TempData["Error"] = "Error encountered";
 			}
-			TempData["Error"] = "Error encountered";
 			return View(model);
 		}
 	}

@@ -1,4 +1,6 @@
-﻿namespace MagicVilla_VillaAPI.Controllers
+﻿using Microsoft.AspNetCore.Authorization;
+
+namespace MagicVilla_VillaAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -69,6 +71,7 @@
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize]
         public async Task<ActionResult<ApiResponse>> Create(CreateUpdateVillaDto model)
         {
             if (model is null)
@@ -113,6 +116,7 @@
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [Authorize]
         public async Task<ActionResult<ApiResponse>> Delete(int id)
         {
             if (id <= 0)
@@ -154,6 +158,7 @@
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [Authorize]
         public async Task<ActionResult<ApiResponse>> Update(int id , CreateUpdateVillaDto model)
         {
             if(id <= 0 || model is null)

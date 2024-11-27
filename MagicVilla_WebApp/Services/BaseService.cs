@@ -2,108 +2,76 @@
 using MagicVilla_WebApp.Models.Dtos;
 using MagicVilla_WebApp.Services.IServices;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.ComponentModel;
 using System.Text;
 using static MagicVilla_WebApp.StaticDetails;
 
 namespace MagicVilla_WebApp.Services
 {
-    public class BaseService(IHttpClientFactory httpClientFactory , IConfiguration configuration) : IBaseService
+    public class BaseService : ConsumeService , IBaseService
     {
-        public ApiResponse Response { get; set; } = new();
-        protected readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
-        protected readonly string _url = configuration.GetValue<string>("ServiceUrls:VillaAPI");
-
-        public async Task<ApiResponse?> SendAsync(ApiRequest apiRequest)
+        private readonly IConfiguration _configuration;
+		protected readonly string _url;
+		public BaseService(IHttpClientFactory httpClientFactory , IConfiguration configuration) : base(httpClientFactory)
         {
-            try
-            {
-                var client = _httpClientFactory.CreateClient("VillaApi");
-                HttpRequestMessage message = new HttpRequestMessage();
-                message.Headers.Add("Accept", "application/json");
-                message.RequestUri = new Uri(apiRequest.Url);
-                if(apiRequest.Data is not null)
-                {
-                    message.Content = new StringContent(JsonConvert.SerializeObject(apiRequest.Data),Encoding.UTF8, "application/json");
-                }
-                switch(apiRequest.apiType)
-                {
-                    case ApiType.POST:
-                        message.Method = HttpMethod.Post;
-                        break;
-                    case ApiType.PUT:
-                        message.Method = HttpMethod.Put;
-                        break;
-                    case ApiType.DELETE:
-                        message.Method = HttpMethod.Delete;
-                        break;
-                    default:
-                        message.Method = HttpMethod.Get;
-                        break;
-                }
-                HttpResponseMessage responseMesssage = await client.SendAsync(message);
-                var responseContent = await responseMesssage.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<ApiResponse>(responseContent);
-            }
-            catch (Exception ex)
-            {
-                return new ApiResponse()
-                {
-                    IsSuccess = false,
-                    Errors = new List<string>() { ex.Message }
-                };
-            }
-        }
+            _configuration = configuration;
+            _url = _configuration.GetValue<string>("ServiceUrls:VillaAPI");
+		}
 
 
 
-
-		public async Task<ApiResponse?> CreateAsync<T>(T dto , string endPoint)
+		public async Task<ApiResponse?> CreateAsync<T>(T dto , string endPoint, string token)
 		{
 			return await SendAsync(new ApiRequest()
 			{
 				apiType = ApiType.POST,
 				Data = dto,
-				Url = $"{_url}/api/{endPoint}"
+				Url = $"{_url}/api/{endPoint}",
+				Token = token
 			});
 
 		}
 
-		public async Task<ApiResponse?> DeleteAsync(int id , string endPoint)
+		public async Task<ApiResponse?> DeleteAsync(int id , string endPoint, string token)
 		{
 			return await SendAsync(new ApiRequest()
 			{
 				apiType = ApiType.DELETE,
-				Url = $"{_url}/api/{endPoint}/{id}"
-			});
+				Url = $"{_url}/api/{endPoint}/{id}",
+                Token = token
+            });
 		}
 
-		public async Task<ApiResponse?> GetAllAsync(string endPoint)
+		public async Task<ApiResponse?> GetAllAsync(string endPoint, string token)
 		{
 			return await SendAsync(new ApiRequest()
 			{
 				apiType = ApiType.GET,
-				Url = $"{_url}/api/{endPoint}"
-			});
+				Url = $"{_url}/api/{endPoint}",
+                Token = token
+            });
 		}
 
-		public async Task<ApiResponse?> GetAsync(int id , string endPoint)
+		public async Task<ApiResponse?> GetAsync(int id , string endPoint, string token)
 		{
 			return await SendAsync(new ApiRequest()
 			{
 				apiType = ApiType.GET,
-				Url = $"{_url}/api/{endPoint}/{id}"
-			});
+				Url = $"{_url}/api/{endPoint}/{id}",
+                Token = token
+            });
 		}
 
-		public async Task<ApiResponse?> UpdateAsync<T>(T dto, int id , string endPoint)
+		public async Task<ApiResponse?> UpdateAsync<T>(T dto, int id , string endPoint, string token)
 		{
 			return await SendAsync(new ApiRequest()
 			{
 				apiType = ApiType.PUT,
 				Data = dto,
-				Url = $"{_url}/api/{endPoint}/{id}"
-			});
+				Url = $"{_url}/api/{endPoint}/{id}",
+                Token = token
+            });
 		}
 	}
 }

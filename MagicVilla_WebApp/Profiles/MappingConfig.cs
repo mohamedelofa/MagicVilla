@@ -13,6 +13,9 @@ namespace MagicVilla_WebApp.Profiles
             CreateMap<GetVillaNumberDto, UpdateVillaNumberViewModel>().ReverseMap();
             CreateMap<UpdateVillaNumberViewModel, UpdateVillaNumberDto>().ReverseMap();
 
+            CreateMap<RegisterRequestViewModel, RegisterRequestDto>().ReverseMap();
+            CreateMap<LogInRequestViewModel, LogInRequestDto>().ReverseMap();
+
         }
     }
 }

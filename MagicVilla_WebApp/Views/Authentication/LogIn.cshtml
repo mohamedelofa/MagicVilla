@@ -1,0 +1,46 @@
+﻿@model LogInRequestViewModel
+
+<div class="container border shadow mt-5 p-3">
+	<div class="text-center p-3">
+		<h2 class="text-info">LogIn</h2>
+	</div>
+	<div>
+		<form asp-action="LogIn" method="post" class="row">
+			<div asp-validation-summary="ModelOnly" class="text-danger"></div>
+			<div class="mb-3 row">
+				<div class="col-2">
+					<label asp-for="UserName"></label>
+				</div>
+				<div class="col-10">
+					<input asp-for="UserName" class="form-control" />
+					<span asp-validation-for="UserName" class="text-danger"></span>
+				</div>
+			</div>
+
+
+			<div class="mb-3 row">
+				<div class="col-2">
+					<label asp-for="Password"></label>
+				</div>
+				<div class="col-10">
+					<input asp-for="Password" class="form-control" />
+					<span asp-validation-for="Password" class="text-danger"></span>
+				</div>
+			</div>
+
+
+
+			<div class="row">
+				<div class="col offset-2">
+					<input type="submit" class="btn btn-primary form-control" value="LogIn" />
+				</div>
+			</div>
+		</form>
+	</div>
+</div>
+
+@section Scripts {
+	<script src="~/lib/jquery-validation/dist/jquery.validate.min.js"></script>
+	<script src="~/lib/jquery-validation-unobtrusive/jquery.validate.unobtrusive.min.js"></script>
+}
+

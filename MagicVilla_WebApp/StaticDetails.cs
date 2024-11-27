@@ -9,5 +9,6 @@
             PUT,
             DELETE
         }
+        public static string sessionTokenKey = "JWT Token";
     }
 }
