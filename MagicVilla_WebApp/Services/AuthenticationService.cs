@@ -11,7 +11,7 @@ namespace MagicVilla_WebApp.Services
         public AuthenticationService(IHttpClientFactory httpClientFactory, IConfiguration configuration) : base(httpClientFactory)
         {
             _configuration = configuration;
-			_url = $"{_configuration.GetValue<string>("ServiceUrls:VillaAPI")}/api/Authentication";
+			_url = $"{_configuration.GetValue<string>("ServiceUrls:VillaAPI")}/api/{StaticDetails.Version}/Authentication";
 		}
         public async Task<ApiResponse?> LogIn(LogInRequestDto dto)
 		{

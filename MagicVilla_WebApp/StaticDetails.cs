@@ -10,5 +10,6 @@
             DELETE
         }
         public static string sessionTokenKey = "JWT Token";
+        public static string Version = "v1";
     }
 }

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace MagicVilla_WebApp.Controllers
 {
@@ -20,14 +21,15 @@ namespace MagicVilla_WebApp.Controllers
 
 		public async Task<IActionResult> Index()
 		{
-			ApiResponse? response = await _villaNumberService.GetAllAsync(endPoint, HttpContext.Session.GetString(StaticDetails.sessionTokenKey));
+			List<GetVillaNumberDto> lst = new List<GetVillaNumberDto>();
+
+            ApiResponse? response = await _villaNumberService.GetAllAsync(endPoint, HttpContext.Session.GetString(StaticDetails.sessionTokenKey));
 			if(response is not null && response.IsSuccess)
 			{
-				List<GetVillaNumberDto> lst = JsonConvert.DeserializeObject<List<GetVillaNumberDto>>(Convert.ToString(response.Result));
-				return View(lst);
+				lst = JsonConvert.DeserializeObject<List<GetVillaNumberDto>>(Convert.ToString(response.Result));
 			}
-			return BadRequest();
-		}
+            return View(lst);
+        }
 
 		[HttpGet]
         [Authorize]
@@ -75,7 +77,7 @@ namespace MagicVilla_WebApp.Controllers
 		}
 
 		[HttpGet]
-        [Authorize]
+		[Authorize]
         public async Task<IActionResult> Update(int id)
 		{
 			if(id <= 0) return BadRequest();

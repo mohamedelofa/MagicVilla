@@ -1,15 +1,17 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 
-namespace MagicVilla_VillaAPI.Controllers
+namespace MagicVilla_VillaAPI.Controllers.v1
 {
-    [Route("api/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
     [ApiController]
+    [ApiVersion("1")]
     public class VillaAPIController : ControllerBase
     {
         private readonly IMapper _mapper;
         private readonly IVillaRepository _villaRepository;
         private readonly ApiResponse response;
-        public VillaAPIController(IMapper mapper , IVillaRepository villaRepository)
+        public VillaAPIController(IMapper mapper, IVillaRepository villaRepository)
         {
             _mapper = mapper;
             _villaRepository = villaRepository;
@@ -17,7 +19,8 @@ namespace MagicVilla_VillaAPI.Controllers
         }
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<ApiResponse>> GetVillas()
+		//[MapToApiVersion("1")]
+		public async Task<ActionResult<ApiResponse>> GetVillas()
         {
             try
             {
@@ -34,11 +37,12 @@ namespace MagicVilla_VillaAPI.Controllers
             return response;
         }
 
+
         [HttpGet("{id:int}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async  Task<ActionResult<ApiResponse>> GetById(int id)
+        public async Task<ActionResult<ApiResponse>> GetById(int id)
         {
             if (id <= 0)
             {
@@ -52,7 +56,7 @@ namespace MagicVilla_VillaAPI.Controllers
                 if (villa is null)
                 {
                     response.IsSuccess = false;
-                    response.StatusCode=HttpStatusCode.NotFound;
+                    response.StatusCode = HttpStatusCode.NotFound;
                     return NotFound(response);
                 }
                 response.IsSuccess = true;
@@ -82,7 +86,7 @@ namespace MagicVilla_VillaAPI.Controllers
             }
             try
             {
-                if(await _villaRepository.GetAsync(v => v.Name.ToLower() == model.Name.ToLower() , false) is not null)
+                if (await _villaRepository.GetAsync(v => v.Name.ToLower() == model.Name.ToLower(), false) is not null)
                 {
                     response.IsSuccess = false;
                     response.Errors.Add("Villa Already Exist");
@@ -90,7 +94,7 @@ namespace MagicVilla_VillaAPI.Controllers
                     return response;
                 }
                 Villa villa = _mapper.Map<Villa>(model);
-               if (await _villaRepository.CreateAsync(villa) == true)
+                if (await _villaRepository.CreateAsync(villa) == true)
                 {
                     response.IsSuccess = true;
                     response.StatusCode = HttpStatusCode.Created;
@@ -145,7 +149,7 @@ namespace MagicVilla_VillaAPI.Controllers
                     response.StatusCode = HttpStatusCode.InternalServerError;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 response.IsSuccess = false;
                 response.Errors.Add(ex.Message);
@@ -159,9 +163,9 @@ namespace MagicVilla_VillaAPI.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [Authorize]
-        public async Task<ActionResult<ApiResponse>> Update(int id , CreateUpdateVillaDto model)
+        public async Task<ActionResult<ApiResponse>> Update(int id, CreateUpdateVillaDto model)
         {
-            if(id <= 0 || model is null)
+            if (id <= 0 || model is null)
             {
                 response.IsSuccess = false;
                 response.StatusCode = HttpStatusCode.BadRequest;
@@ -169,7 +173,14 @@ namespace MagicVilla_VillaAPI.Controllers
             }
             try
             {
-                Villa? villa = await _villaRepository.GetAsync(v => v.Id == id, false);
+				if (await _villaRepository.GetAsync(v => v.Name.ToLower() == model.Name.ToLower(), false) is not null)
+				{
+					response.IsSuccess = false;
+					response.Errors.Add("Villa Already Exist");
+					response.StatusCode = HttpStatusCode.BadRequest;
+					return response;
+				}
+				Villa? villa = await _villaRepository.GetAsync(v => v.Id == id, false);
                 if (villa is null)
                 {
                     response.IsSuccess = false;
@@ -180,7 +191,7 @@ namespace MagicVilla_VillaAPI.Controllers
                 villa = _mapper.Map<Villa>(model);
                 villa.Id = id;
                 villa.CreatedDate = createAt;
-                 if(await _villaRepository.UpdateAsync(villa) == true)
+                if (await _villaRepository.UpdateAsync(villa) == true)
                 {
                     response.IsSuccess = true;
                     response.StatusCode = HttpStatusCode.NoContent;

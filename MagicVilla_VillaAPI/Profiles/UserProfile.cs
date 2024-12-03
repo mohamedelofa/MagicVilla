@@ -4,7 +4,10 @@
 	{
         public UserProfile()
         {
-            CreateMap<RegisterRequestDto, LocalUser>();
+            CreateMap<RegisterRequestDto, ApplicationUser>()
+                .ForMember(dest => dest.PasswordHash,
+                src => src.MapFrom(x => x.Password));
+            CreateMap<ApplicationUser, UserDto>().ReverseMap();
         }
     }
 }

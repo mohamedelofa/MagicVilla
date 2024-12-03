@@ -1,4 +1,6 @@
 ﻿
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -6,21 +8,31 @@ using System.Text;
 
 namespace MagicVilla_VillaAPI.Repository.implementation
 {
-	public class UserRepository(AppDbContext context , IMapper mapper , IConfiguration configuration) : IUserRepository
+	public class UserRepository(
+		AppDbContext context ,
+		IMapper mapper , 
+		IConfiguration configuration ,
+		UserManager<ApplicationUser> userManager,
+		RoleManager<IdentityRole> roleManager) 
+		: IUserRepository
 	{
 		private readonly AppDbContext _context = context;
 		private readonly IMapper _mapper = mapper;
 		private readonly IConfiguration _configuration = configuration;
-		public async Task<bool> IsUnique(string userName)
+		private readonly UserManager<ApplicationUser> _userManager = userManager;
+		private readonly RoleManager<IdentityRole> _roleManager = roleManager;
+		public async Task<bool> IsUnique(string userName,string email)
 		{
-			return !await (_context.Users.AnyAsync(u => u.UserName == userName));
+			return !await (_context.Users.AnyAsync(u => u.UserName == userName || u.Email == email));
 		}
 
 		public async Task<LogInResponseDto?> LogIn(LogInRequestDto dto)
 		{
-			LocalUser? user = await _context.Users.FirstOrDefaultAsync(u => u.UserName.ToLower() == dto.UserName.ToLower() && u.Password == dto.Password);
+			//ApplicationUser? user = await _context.Users.FirstOrDefaultAsync(u => u.UserName.ToLower() == dto.UserName.ToLower());
+			ApplicationUser? user = await _userManager.FindByNameAsync(dto.UserName);
 			if (user is null) return null;
-
+			bool isValid = await _userManager.CheckPasswordAsync(user, dto.Password);
+			if (!isValid) return null;
 			// Generate JWT Token
 			var tokenHandler = new JwtSecurityTokenHandler();
 			var credentials = new SigningCredentials(
@@ -31,32 +43,66 @@ namespace MagicVilla_VillaAPI.Repository.implementation
 			{
 				Expires = DateTime.Now.AddDays(1),
 				SigningCredentials = credentials,
-				Subject = GenerateClaims(user)
+				Subject = await GenerateClaimsAsync(user)
 			};
 			var token = tokenHandler.CreateToken(tokenDescriptor);
 			return new LogInResponseDto()
 			{
-				User = user,
+				User = _mapper.Map<UserDto>(user),
 				Token = tokenHandler.WriteToken(token)
 			};
 			
 		}
 
-		private ClaimsIdentity GenerateClaims(LocalUser user)
+		private async Task<ClaimsIdentity> GenerateClaimsAsync(ApplicationUser user)
 		{
+			var roles = await _userManager.GetRolesAsync(user);
 			var claimsIdentity = new ClaimsIdentity();
 			claimsIdentity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
-			claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, user.Role));
+			claimsIdentity.AddClaim(new Claim(ClaimTypes.Name, user.UserName));
+			//claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, user.Role));
+			foreach(var role in roles)
+			{
+                claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, role));
+            }
 			return claimsIdentity;
 		}
 
-		public async Task<LocalUser?> Register(RegisterRequestDto dto)
+		public async Task<RegisterResponseDto?> Register(RegisterRequestDto dto)
 		{
-			LocalUser user = _mapper.Map<LocalUser>(dto);
-			await _context.Users.AddAsync(user);
-			await _context.SaveChangesAsync();
-			user.Password = string.Empty;
-			return user;
+			using (var transaction = _context.Database.BeginTransaction())
+			{
+                ApplicationUser user = _mapper.Map<ApplicationUser>(dto);
+                var result = await _userManager.CreateAsync(user, dto.Password);
+                if (result.Succeeded)
+                {
+                    var roles = dto.Roles.Split(',');
+					foreach (var role in roles)
+					{
+						if (!_roleManager.RoleExistsAsync(role).Result)
+						{
+							await _roleManager.CreateAsync(new IdentityRole(role));
+						}
+					}
+                    if (_userManager.AddToRolesAsync(user, roles).Result.Succeeded)
+                    {
+                        transaction.Commit();
+						return new RegisterResponseDto()
+						{
+							User = _mapper.Map<UserDto>(user)
+						};
+                    }
+					else
+					{
+						transaction.Rollback();
+					}
+                }
+				return new RegisterResponseDto
+				{
+					User = null,
+					Errors = string.Join(",", result.Errors.ToList().Select(x => x.Description))
+				};
+            }
 		}
 	}
 }

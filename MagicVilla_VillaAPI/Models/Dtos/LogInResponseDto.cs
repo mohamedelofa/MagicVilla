@@ -2,7 +2,7 @@
 {
 	public class LogInResponseDto
 	{
-		public LocalUser? User { get; set; }
+		public UserDto? User { get; set; }
 		public string Token { get; set; } = null!;
 	}
 }

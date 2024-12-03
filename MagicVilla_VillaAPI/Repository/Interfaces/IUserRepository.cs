@@ -2,8 +2,8 @@
 {
 	public interface IUserRepository
 	{
-		Task<bool> IsUnique(string userName);
+		Task<bool> IsUnique(string userName , string email);
 		Task<LogInResponseDto?> LogIn(LogInRequestDto dto);
-		Task<LocalUser?> Register(RegisterRequestDto dto);
+		Task<RegisterResponseDto?> Register(RegisterRequestDto dto);
 	}
 }

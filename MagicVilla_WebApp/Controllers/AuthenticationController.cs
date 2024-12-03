@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
 namespace MagicVilla_WebApp.Controllers
@@ -63,8 +64,17 @@ namespace MagicVilla_WebApp.Controllers
 					LogInResponseDto logged = JsonConvert.DeserializeObject<LogInResponseDto>(Convert.ToString(response.Result));
 					var identity = new ClaimsIdentity(CookieAuthenticationDefaults.AuthenticationScheme);
 					identity.AddClaim(new Claim(ClaimTypes.Name, logged.User.UserName));
-					identity.AddClaim(new Claim(ClaimTypes.Role, logged.User.Role));
-					var principal = new ClaimsPrincipal(identity);
+					//identity.AddClaim(new Claim(ClaimTypes.Role, logged.User.Role));
+					//foreach(var role in logged.Roles)
+					//                   identity.AddClaim(new Claim(ClaimTypes.Role, role));
+
+					var handler = new JwtSecurityTokenHandler();
+					var jwt = handler.ReadJwtToken(logged.Token);
+					foreach(var role in jwt.Claims.Where(c => c.Type == "role").Select(c => c.Value))
+					{
+						identity.AddClaim(new Claim(ClaimTypes.Role, role));
+					}
+                    var principal = new ClaimsPrincipal(identity);
 					await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme,principal);
 					HttpContext.Session.SetString(StaticDetails.sessionTokenKey,logged.Token);
 					TempData["Success"] = "LogIn done successfully";

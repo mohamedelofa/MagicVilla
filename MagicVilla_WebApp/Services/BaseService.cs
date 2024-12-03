@@ -13,6 +13,7 @@ namespace MagicVilla_WebApp.Services
     {
         private readonly IConfiguration _configuration;
 		protected readonly string _url;
+		protected readonly string _version = StaticDetails.Version;
 		public BaseService(IHttpClientFactory httpClientFactory , IConfiguration configuration) : base(httpClientFactory)
         {
             _configuration = configuration;
@@ -27,7 +28,7 @@ namespace MagicVilla_WebApp.Services
 			{
 				apiType = ApiType.POST,
 				Data = dto,
-				Url = $"{_url}/api/{endPoint}",
+				Url = $"{_url}/api/{_version}/{endPoint}",
 				Token = token
 			});
 
@@ -38,7 +39,7 @@ namespace MagicVilla_WebApp.Services
 			return await SendAsync(new ApiRequest()
 			{
 				apiType = ApiType.DELETE,
-				Url = $"{_url}/api/{endPoint}/{id}",
+				Url = $"{_url}/api/{_version}/{endPoint}/{id}",
                 Token = token
             });
 		}
@@ -48,7 +49,7 @@ namespace MagicVilla_WebApp.Services
 			return await SendAsync(new ApiRequest()
 			{
 				apiType = ApiType.GET,
-				Url = $"{_url}/api/{endPoint}",
+				Url = $"{_url}/api/{_version}/{endPoint}",
                 Token = token
             });
 		}
@@ -58,7 +59,7 @@ namespace MagicVilla_WebApp.Services
 			return await SendAsync(new ApiRequest()
 			{
 				apiType = ApiType.GET,
-				Url = $"{_url}/api/{endPoint}/{id}",
+				Url = $"{_url}/api/{_version}/{endPoint}/{id}",
                 Token = token
             });
 		}
@@ -69,7 +70,7 @@ namespace MagicVilla_WebApp.Services
 			{
 				apiType = ApiType.PUT,
 				Data = dto,
-				Url = $"{_url}/api/{endPoint}/{id}",
+				Url = $"{_url}/api/{_version}/{endPoint}/{id}",
                 Token = token
             });
 		}
