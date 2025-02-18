@@ -144,7 +144,7 @@ namespace MagicVilla_VillaAPI.Controllers.v2
 			{
 				response.IsSuccess = false;
 				response.StatusCode = HttpStatusCode.BadRequest;
-				return response;
+				return BadRequest(response);
 			}
 			try
 			{
@@ -153,7 +153,7 @@ namespace MagicVilla_VillaAPI.Controllers.v2
 				{
 					response.IsSuccess = false;
 					response.StatusCode = HttpStatusCode.NotFound;
-					return response;
+					return NotFound(response);
 				}
 				DeleteFile(villa.ImageName);
 				if (await _villaRepository.DeleteAsync(villa) == true)
