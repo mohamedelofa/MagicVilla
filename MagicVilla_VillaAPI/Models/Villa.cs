@@ -11,6 +11,7 @@
         public int Sqft { get; set; }
         public int Occupancy { get; set; }
         public string ImageUrl { get; set; } = null!;
+        public string ImageName { get; set; } = null!;
         public string Amenity { get; set; } = null!;
         public DateTime CreatedDate { get; set; }
         public DateTime? UpdatedDate { get; set; }

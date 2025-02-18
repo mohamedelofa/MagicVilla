@@ -11,7 +11,6 @@ namespace MagicVilla_WebApp.Models.Dtos
         public double Rate { get; set; }
         public int Sqft { get; set; }
         public int Occupancy { get; set; }
-        public string ImageUrl { get; set; } = null!;
         public string Amenity { get; set; } = null!;
     }
 }

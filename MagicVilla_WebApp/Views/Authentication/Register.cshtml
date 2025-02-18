@@ -52,11 +52,13 @@
 
 			<div class="mb-3 row">
 				<div class="col-2">
-					<label asp-for="Roles"></label>
+					<label asp-for="Role"></label>
 				</div>
 				<div class="col-10">
-					<input asp-for="Roles" class="form-control"/>
-					<span asp-validation-for="Roles" class="text-danger"></span>
+					<select class="form-select" asp-for="Role" asp-items="ViewBag.RoleList">
+						<option value="" disabled selected>-- select role --</option>
+					</select>
+					<span asp-validation-for="Role" class="text-danger"></span>
 				</div>
 			</div>
 

@@ -2,5 +2,6 @@
 {
     public class CreateUpdateVillaDto : BaseVillaDto
     {
+        public IFormFile Image { get; set; }
     }
 }

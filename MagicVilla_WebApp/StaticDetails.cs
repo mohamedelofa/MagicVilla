@@ -10,6 +10,13 @@
             DELETE
         }
         public static string sessionTokenKey = "JWT Token";
-        public static string Version = "v1";
+        public static string Version = "v2";
+        public const string Admin = "admin";
+        public const string User = "user";
+        public enum ContentType
+        {
+            Json,
+            MultipartFormData
+        }
     }
 }

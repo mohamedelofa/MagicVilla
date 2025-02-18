@@ -15,7 +15,7 @@
 <body>
     <partial name="_Notification"/>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-dark  box-shadow mb-3">
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark  box-shadow mb-3">
             <div class="container-fluid">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">MagicVilla_WebApp</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
@@ -23,31 +23,50 @@
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                    <ul class="navbar-nav">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Villa" asp-action="Index">Villa</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="VillaNumber" asp-action="Index">Villa Number</a>
-                        </li>
-                       @*  @if(httpAccess.HttpContext.Session.GetString(StaticDetails.sessionTokenKey) is not  null &&
+                         <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                @if(User.IsInRole(StaticDetails.Admin))
+                                {
+                                    <span>Content Managemnt</span>
+                                }
+                                else
+                                {
+                                    <span>Villa & villanumbers</span>
+                                }
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li>
+                                   <a class="dropdown-item" asp-area="" asp-controller="Villa" asp-action="Index">Villa</a>
+                                </li>
+                                <li>
+                                   <a class="dropdown-item" asp-area="" asp-controller="VillaNumber" asp-action="Index">Villa Number</a>
+                                </li>
+                            </ul>
+                         </li>
+                    </ul>
+                    <ul class="navbar-nav">
+                         @*  @if(httpAccess.HttpContext.Session.GetString(StaticDetails.sessionTokenKey) is not  null &&
                                 httpAccess.HttpContext.Session.GetString(StaticDetails.sessionTokenKey) != string.Empty) *@
                         @if(User.Identity.IsAuthenticated)
                         {
+                             <li class="nav-item">
+                                <a class="nav-link" href="#">welcome @User.Identity.Name</a>
+                            </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Authentication" asp-action="LogOut">LogOut</a>
+                                <a class="nav-link" asp-area="" asp-controller="Authentication" asp-action="LogOut">LogOut</a>
                             </li>
                         }
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Authentication" asp-action="LogIn">LogIn</a>
+                                <a class="nav-link" asp-area="" asp-controller="Authentication" asp-action="LogIn">LogIn</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" asp-area="" asp-controller="Authentication" asp-action="Register">Register</a>
+                                <a class="nav-link" asp-area="" asp-controller="Authentication" asp-action="Register">Register</a>
                             </li>
                         }
                     </ul>
