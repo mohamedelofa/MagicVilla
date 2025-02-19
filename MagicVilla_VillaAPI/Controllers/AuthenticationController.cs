@@ -2,7 +2,7 @@
 
 namespace MagicVilla_VillaAPI.Controllers
 {
-	[Route("api/[controller]")]
+	[Route("api/v{version:apiVersion}/[controller]")]
 	[ApiController]
 	[ApiVersionNeutral]
 	public class AuthenticationController(IUserRepository userRepository, ApiResponse apiResponse) : ControllerBase

@@ -96,7 +96,7 @@ namespace MagicVilla_VillaAPI.Repository.implementation
 			var roles = await _userManager.GetRolesAsync(user);
 			var claimsIdentity = new ClaimsIdentity();
 			claimsIdentity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
-			claimsIdentity.AddClaim(new Claim(ClaimTypes.Name, user.UserName));
+			claimsIdentity.AddClaim(new Claim(ClaimTypes.Name, user?.UserName ?? string.Empty));
 			//claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, user.Role));
 			foreach (var role in roles)
 			{

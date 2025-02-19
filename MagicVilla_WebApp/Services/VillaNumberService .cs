@@ -1,14 +1,13 @@
-﻿using MagicVilla_WebApp.Models;
-using MagicVilla_WebApp.Models.Dtos;
-using MagicVilla_WebApp.Services.IServices;
+﻿using MagicVilla_WebApp.Services.IServices;
 
 namespace MagicVilla_WebApp.Services
 {
-    public class VillaNumberService : BaseService, IVillaNumberService
-    {
-        public VillaNumberService(IHttpClientFactory httpClientFactory , IConfiguration configuration) : base(httpClientFactory , configuration) 
-        {
-            
-        }
-    }
+	public class VillaNumberService : BaseService, IVillaNumberService
+	{
+		public VillaNumberService(IConfiguration configuration, IConsumeService consumeService)
+			: base(configuration, consumeService)
+		{
+
+		}
+	}
 }
