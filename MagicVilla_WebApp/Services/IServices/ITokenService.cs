@@ -1,9 +1,12 @@
-﻿namespace MagicVilla_WebApp.Services.IServices
+﻿using MagicVilla_WebApp.Models.Dtos;
+
+namespace MagicVilla_WebApp.Services.IServices
 {
 	public interface ITokenService
 	{
-		void SetToken(string accessToken);
-		string GetToken();
+		void SetToken(TokenDto token);
+		string GetAccessToken();
+		string GetRefreshToken();
 		void DeleteToken();
 	}
 }

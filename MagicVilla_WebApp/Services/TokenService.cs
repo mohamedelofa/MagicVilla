@@ -1,4 +1,5 @@
-﻿using MagicVilla_WebApp.Services.IServices;
+﻿using MagicVilla_WebApp.Models.Dtos;
+using MagicVilla_WebApp.Services.IServices;
 
 namespace MagicVilla_WebApp.Services
 {
@@ -12,9 +13,10 @@ namespace MagicVilla_WebApp.Services
 		public void DeleteToken()
 		{
 			_contextAccessor.HttpContext?.Response.Cookies.Delete(StaticDetails.AccessToken);
+			_contextAccessor.HttpContext?.Response.Cookies.Delete(StaticDetails.RefreshToken);
 		}
 
-		public string GetToken()
+		public string GetAccessToken()
 		{
 			string? token = null;
 			bool flag = _contextAccessor.HttpContext?.Request.Cookies.TryGetValue(StaticDetails.AccessToken, out token) ?? false;
@@ -24,10 +26,19 @@ namespace MagicVilla_WebApp.Services
 
 		}
 
-		public void SetToken(string accessToken)
+		public string GetRefreshToken()
 		{
-			var cookieOptions = new CookieOptions() { Expires = DateTime.Now.AddDays(1) };
-			_contextAccessor.HttpContext?.Response.Cookies.Append(StaticDetails.AccessToken, accessToken, cookieOptions);
+			string? token = null;
+			bool flag = _contextAccessor.HttpContext?.Request.Cookies.TryGetValue(StaticDetails.RefreshToken, out token) ?? false;
+			if (flag)
+				return token ?? string.Empty;
+			return string.Empty;
+		}
+
+		public void SetToken(TokenDto token)
+		{
+			_contextAccessor.HttpContext?.Response.Cookies.Append(StaticDetails.AccessToken, token.Accesstoken);
+			_contextAccessor.HttpContext?.Response.Cookies.Append(StaticDetails.RefreshToken, token.RefreshToken);
 		}
 	}
 }

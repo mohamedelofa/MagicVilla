@@ -7,5 +7,6 @@ namespace MagicVilla_WebApp.Services.IServices
 	{
 		Task<ApiResponse?> LogIn(LogInRequestDto dto);
 		Task<ApiResponse?> Register(RegisterRequestDto dto);
+		Task<ApiResponse?> LogOut();
 	}
 }

@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace MagicVilla_VillaAPI.Repository.implementation
@@ -32,11 +33,15 @@ namespace MagicVilla_VillaAPI.Repository.implementation
 			if (user is null) return null;
 			bool isValid = await _userManager.CheckPasswordAsync(user, dto.Password);
 			if (!isValid) return null;
-			// Generate JWT Token
-			var accessToken = await GetAccessTokenAsync(user);
+			var jwtTokenId = $"JTI{Guid.NewGuid().ToString()}";
+			// Generate JWT Access Token
+			var accessToken = await GetAccessTokenAsync(user, jwtTokenId);
+			// Generate Refresh Token
+			var refreshToken = await GenerateRefreshTokenAsync(user.Id, jwtTokenId);
 			return new LogInResponseDto()
 			{
-				AccessToken = accessToken
+				AccessToken = accessToken,
+				RefreshToken = refreshToken
 			};
 
 		}
@@ -74,7 +79,42 @@ namespace MagicVilla_VillaAPI.Repository.implementation
 			}
 		}
 
-		private async Task<string> GetAccessTokenAsync(ApplicationUser user)
+		public async Task<TokenDto?> RefreshTokenAsync(TokenDto tokenDto)
+		{
+			var existingRefreshToken = _context.RefreshTokens.FirstOrDefault(x => x.Token == tokenDto.RefreshToken);
+			if (existingRefreshToken is null) return null;
+			if (!existingRefreshToken.IsValid)
+			{
+				await MarkAllTokenInChainAsInvalid(existingRefreshToken.JwtTokenId);
+				return null;
+			}
+			if (!await IsValidAccessToken(existingRefreshToken, tokenDto.AccessToken) || existingRefreshToken.IsExpired)
+			{
+				await MarkTokenAsInvalid(existingRefreshToken);
+				return null;
+			}
+			await MarkTokenAsInvalid(existingRefreshToken);
+			var newRefreshToken = await GenerateRefreshTokenAsync(existingRefreshToken.UserId, existingRefreshToken.JwtTokenId);
+			var user = await _userManager.FindByIdAsync(existingRefreshToken.UserId);
+			if (user is null) return null;
+			var newAccessToken = await GetAccessTokenAsync(user, existingRefreshToken.JwtTokenId);
+			return new TokenDto()
+			{
+				AccessToken = newAccessToken,
+				RefreshToken = newRefreshToken
+			};
+
+		}
+
+		public async Task<bool> RevokeToken(string refreshToken)
+		{
+			var existingRefreshToken = _context.RefreshTokens.FirstOrDefault(x => x.Token == refreshToken);
+			if (existingRefreshToken is null) return false;
+			await MarkTokenAsInvalid(existingRefreshToken);
+			return true;
+		}
+
+		private async Task<string> GetAccessTokenAsync(ApplicationUser user, string jwtTokenId)
 		{
 			var tokenHandler = new JwtSecurityTokenHandler();
 			var credentials = new SigningCredentials(
@@ -83,20 +123,21 @@ namespace MagicVilla_VillaAPI.Repository.implementation
 				);
 			var tokenDescriptor = new SecurityTokenDescriptor()
 			{
-				Expires = DateTime.Now.AddDays(1),
+				Expires = DateTime.Now.AddMinutes(60),
 				SigningCredentials = credentials,
-				Subject = await GenerateClaimsAsync(user)
+				Subject = await GenerateClaimsAsync(user, jwtTokenId)
 			};
 			var token = tokenHandler.CreateToken(tokenDescriptor);
 			return tokenHandler.WriteToken(token);
 		}
 
-		private async Task<ClaimsIdentity> GenerateClaimsAsync(ApplicationUser user)
+		private async Task<ClaimsIdentity> GenerateClaimsAsync(ApplicationUser user, string jwtTokenId)
 		{
 			var roles = await _userManager.GetRolesAsync(user);
 			var claimsIdentity = new ClaimsIdentity();
 			claimsIdentity.AddClaim(new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()));
 			claimsIdentity.AddClaim(new Claim(ClaimTypes.Name, user?.UserName ?? string.Empty));
+			claimsIdentity.AddClaim(new Claim(JwtRegisteredClaimNames.Jti, jwtTokenId));
 			//claimsIdentity.AddClaim(new Claim(ClaimTypes.Role, user.Role));
 			foreach (var role in roles)
 			{
@@ -104,5 +145,66 @@ namespace MagicVilla_VillaAPI.Repository.implementation
 			}
 			return claimsIdentity;
 		}
+
+		private async Task<string> GenerateRefreshTokenAsync(string userId, string jwtTokenId)
+		{
+			var refreshToken = new RefreshToken()
+			{
+				Token = await GetRefreshTokenAsync(),
+				ExpireOn = DateTime.UtcNow.AddDays(15),
+				JwtTokenId = jwtTokenId,
+				UserId = userId
+			};
+			_context.Add(refreshToken);
+			await _context.SaveChangesAsync();
+			return refreshToken.Token;
+		}
+
+		private async Task<string> GetRefreshTokenAsync()
+		{
+			var randomNumber = new byte[32];
+			using (var rng = RandomNumberGenerator.Create())
+			{
+				rng.GetBytes(randomNumber);
+				return Convert.ToBase64String(randomNumber);
+			}
+		}
+		private async Task<bool> IsValidAccessToken(RefreshToken refreshToken, string accessToken)
+		{
+			var accessTokenData = ReadAccessToken(accessToken);
+			return accessTokenData.isSuccess && refreshToken.UserId == accessTokenData.userId && refreshToken.JwtTokenId == accessTokenData.jwtTokenId;
+		}
+		private (bool isSuccess, string userId, string jwtTokenId) ReadAccessToken(string accessToken)
+		{
+			JwtSecurityTokenHandler jwtSecurityTokenHandler = new JwtSecurityTokenHandler();
+			jwtSecurityTokenHandler.ValidateToken(accessToken,
+				new TokenValidationParameters()
+				{
+					ValidateIssuerSigningKey = true,
+					IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(_configuration.GetValue<string>("ApiSettings:Secret"))),
+					ValidateIssuer = false,
+					ValidateAudience = false
+				},
+				out SecurityToken validatedToken
+			);
+			var jwtToken = validatedToken as JwtSecurityToken;
+			if (jwtToken is null) return (false, string.Empty, string.Empty);
+			var userId = jwtToken?.Claims?.FirstOrDefault(c => c.Type == "nameid")?.Value;
+			var jwtTokenId = jwtToken?.Claims?.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Jti)?.Value;
+			return (true, userId ?? string.Empty, jwtTokenId ?? string.Empty);
+		}
+
+		private async Task MarkAllTokenInChainAsInvalid(string jwtTokenId)
+		{
+			await _context.RefreshTokens.Where(r => r.JwtTokenId == jwtTokenId)
+					.ExecuteUpdateAsync(p => p.SetProperty(r => r.IsValid, false));
+		}
+		private async Task MarkTokenAsInvalid(RefreshToken refreshToken)
+		{
+			refreshToken.IsValid = false;
+			_context.Update(refreshToken);
+			await _context.SaveChangesAsync();
+		}
+
 	}
 }

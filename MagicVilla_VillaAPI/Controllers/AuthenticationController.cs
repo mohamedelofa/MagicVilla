@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MagicVilla_VillaAPI.Controllers
 {
@@ -49,6 +50,39 @@ namespace MagicVilla_VillaAPI.Controllers
 			_apiResponse.StatusCode = HttpStatusCode.OK;
 			_apiResponse.IsSuccess = true;
 			_apiResponse.Result = response;
+			return Ok(_apiResponse);
+		}
+
+		[HttpPost("RefreshToken")]
+		public async Task<ActionResult<ApiResponse>> RefreshToken(TokenDto tokenDto)
+		{
+			var response = await _userRepository.RefreshTokenAsync(tokenDto);
+			if (response is null || string.IsNullOrEmpty(response.AccessToken) || string.IsNullOrEmpty(response.RefreshToken))
+			{
+				_apiResponse.StatusCode = HttpStatusCode.BadRequest;
+				_apiResponse.IsSuccess = false;
+				_apiResponse.Errors.Add("Invalid Token");
+				return BadRequest(_apiResponse);
+			}
+			_apiResponse.StatusCode = HttpStatusCode.OK;
+			_apiResponse.IsSuccess = true;
+			_apiResponse.Result = response;
+			return Ok(_apiResponse);
+		}
+		[Authorize]
+		[HttpPost("RevokeToken")]
+		public async Task<ActionResult<ApiResponse>> RevokeToken(string refreshToken)
+		{
+			if (!await _userRepository.RevokeToken(refreshToken))
+			{
+				_apiResponse.StatusCode = HttpStatusCode.BadRequest;
+				_apiResponse.IsSuccess = false;
+				_apiResponse.Errors.Add("Invalid Token");
+				return BadRequest(_apiResponse);
+			}
+			_apiResponse.StatusCode = HttpStatusCode.OK;
+			_apiResponse.IsSuccess = true;
+			_apiResponse.Result = "Token Revoked";
 			return Ok(_apiResponse);
 		}
 	}

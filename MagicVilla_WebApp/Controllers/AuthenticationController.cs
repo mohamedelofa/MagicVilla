@@ -99,7 +99,8 @@ namespace MagicVilla_WebApp.Controllers
 					var principal = new ClaimsPrincipal(identity);
 					await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 					//HttpContext.Session.SetString(StaticDetails.sessionTokenKey, logged.AccessToken);
-					_tokenService.SetToken(logged.AccessToken);
+
+					_tokenService.SetToken(new TokenDto() { Accesstoken = logged.AccessToken, RefreshToken = logged.RefreshToken });
 					TempData["Success"] = "LogIn done successfully";
 					return RedirectToAction("Index", "Home");
 				}
@@ -114,10 +115,20 @@ namespace MagicVilla_WebApp.Controllers
 
 		public async Task<IActionResult> LogOut()
 		{
-			await HttpContext.SignOutAsync();
-			_tokenService.DeleteToken();
+			var response = await _authenticationService.LogOut();
+			if (response is not null && response.IsSuccess)
+			{
+				await HttpContext.SignOutAsync();
+				_tokenService.DeleteToken();
+				return RedirectToAction(nameof(LogIn));
+			}
+			else
+			{
+				TempData["Error"] = "Error encountered";
+				return RedirectToAction("Index", "Home");
+			}
+
 			//HttpContext.Session.SetString(StaticDetails.sessionTokenKey, string.Empty);
-			return RedirectToAction(nameof(LogIn));
 		}
 
 		public ActionResult AccessDenied()
