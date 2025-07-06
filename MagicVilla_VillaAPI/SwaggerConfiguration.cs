@@ -52,22 +52,3 @@ namespace MagicVilla_VillaAPI
 		}
 	}
 }
-
-/*
- 
- options.SwaggerDoc("v1", new OpenApiInfo()
-{
-				Version = "v1",
-				Description = "Magic_VillaV1",
-				TermsOfService = new Uri("http://www.facebook.com"),
-				Title = "MagicVillaAPI"
-});
-options.SwaggerDoc("v2", new OpenApiInfo()
-{
-				Version = "v2",
-				Description = "Magic_VillaV2",
-				TermsOfService = new Uri("http://www.facebook.com"),
-				Title = "MagicVillaAPI"
-});
- 
- */

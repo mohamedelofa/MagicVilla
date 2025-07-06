@@ -1,4 +1,6 @@
 ﻿using Asp.Versioning;
+using MagicVilla_VillaAPI.Helpers;
+using MagicVilla_VillaAPI.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using System.Text.Json;
 
@@ -13,14 +15,17 @@ namespace MagicVilla_VillaAPI.Controllers.v2
 		private readonly IVillaRepository _villaRepository;
 		private readonly ApiResponse response;
 		private readonly IWebHostEnvironment _environment;
+		private readonly ICacheService _cacheService;
 		public VillaAPIController(IMapper mapper,
 			IVillaRepository villaRepository,
-			IWebHostEnvironment environment)
+			IWebHostEnvironment environment,
+			ICacheService cacheService)
 		{
 			_mapper = mapper;
 			_villaRepository = villaRepository;
 			response = new ApiResponse();
 			_environment = environment;
+			_cacheService = cacheService;
 		}
 
 		[HttpGet]
@@ -31,6 +36,17 @@ namespace MagicVilla_VillaAPI.Controllers.v2
 		{
 			try
 			{
+				// Check cache first
+				var cacheKey = RedisKeys.VillasKey(occupancy, pageSize, pageNumber);
+				var cachedVillas = await _cacheService.GetAsync<List<GetVillaDto>>(cacheKey);
+				if (cachedVillas is not null)
+				{
+					response.IsSuccess = true;
+					response.StatusCode = HttpStatusCode.OK;
+					response.Result = cachedVillas;
+					Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(new Pagination() { PageSize = pageSize, PageNumber = pageNumber }));
+					return response;
+				}
 				List<Villa> villas;
 				if (occupancy > 0)
 					villas = await _villaRepository.GetAllAsync(v => v.Occupancy == occupancy, pageSize: pageSize, pageNumber: pageNumber);
@@ -42,6 +58,8 @@ namespace MagicVilla_VillaAPI.Controllers.v2
 				response.StatusCode = HttpStatusCode.OK;
 				Pagination pagination = new Pagination() { PageSize = pageSize, PageNumber = pageNumber };
 				Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(pagination));
+				// Set cache
+				await _cacheService.SetAsync(cacheKey, response.Result, DateTimeOffset.Now.AddMinutes(15));
 			}
 			catch (Exception ex)
 			{
@@ -66,6 +84,16 @@ namespace MagicVilla_VillaAPI.Controllers.v2
 			}
 			try
 			{
+				//Check cache first
+				var cacheKey = $"{RedisKeys.VillaKey}{id}";
+				var cachedVilla = await _cacheService.GetAsync<GetVillaDto>(cacheKey);
+				if (cachedVilla is not null)
+				{
+					response.IsSuccess = true;
+					response.StatusCode = HttpStatusCode.OK;
+					response.Result = cachedVilla;
+					return response;
+				}
 				var villa = await _villaRepository.GetAsync(v => v.Id == id, false);
 				if (villa is null)
 				{
@@ -76,6 +104,8 @@ namespace MagicVilla_VillaAPI.Controllers.v2
 				response.IsSuccess = true;
 				response.StatusCode = HttpStatusCode.OK;
 				response.Result = _mapper.Map<GetVillaDto>(villa);
+				// Set cache
+				await _cacheService.SetAsync(cacheKey, response.Result, DateTimeOffset.Now.AddMinutes(15));
 			}
 			catch (Exception ex)
 			{
@@ -116,6 +146,8 @@ namespace MagicVilla_VillaAPI.Controllers.v2
 					response.IsSuccess = true;
 					response.StatusCode = HttpStatusCode.Created;
 					response.Result = _mapper.Map<GetVillaDto>(villa);
+					// clean cache
+					await _cacheService.RemoveAllAsync(RedisKeys.AllVillasKeys);
 					return response;//CreatedAtAction(nameof(GetById), new { id = villa.Id }, response.Result);
 				}
 				else
@@ -160,6 +192,9 @@ namespace MagicVilla_VillaAPI.Controllers.v2
 				{
 					response.IsSuccess = true;
 					response.StatusCode = HttpStatusCode.NoContent;
+					// clean cache
+					await _cacheService.RemoveAllAsync(RedisKeys.AllVillasKeys);
+					await _cacheService.RemoveAsync($"{RedisKeys.VillaKey}{id}");
 				}
 				else
 				{
@@ -217,6 +252,9 @@ namespace MagicVilla_VillaAPI.Controllers.v2
 				{
 					response.IsSuccess = true;
 					response.StatusCode = HttpStatusCode.NoContent;
+					// clean cache
+					await _cacheService.RemoveAllAsync(RedisKeys.AllVillasKeys);
+					await _cacheService.RemoveAsync($"{RedisKeys.VillaKey}{id}");
 				}
 				else
 				{
@@ -250,7 +288,7 @@ namespace MagicVilla_VillaAPI.Controllers.v2
 
 		private string GetImageUrl(string fileName)
 		{
-			var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+			var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value ?? string.Empty}";
 			var imageUrl = $"{baseUrl}/Images/{fileName}";
 			return imageUrl;
 		}
