@@ -1,5 +1,7 @@
 ﻿using MagicVilla_WebApp.Models.Dtos;
 using MagicVilla_WebApp.Services.IServices;
+using Microsoft.AspNetCore.WebUtilities;
+using System.Text;
 
 namespace MagicVilla_WebApp.Services
 {
@@ -31,7 +33,7 @@ namespace MagicVilla_WebApp.Services
 			string? token = null;
 			bool flag = _contextAccessor.HttpContext?.Request.Cookies.TryGetValue(StaticDetails.RefreshToken, out token) ?? false;
 			if (flag)
-				return token ?? string.Empty;
+				return token != null ? WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token!)) : string.Empty;
 			return string.Empty;
 		}
 

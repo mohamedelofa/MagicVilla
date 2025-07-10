@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using MagicVilla_VillaAPI.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 
 namespace MagicVilla_VillaAPI.Controllers
@@ -6,7 +7,7 @@ namespace MagicVilla_VillaAPI.Controllers
 	[Route("api/v{version:apiVersion}/[controller]")]
 	[ApiController]
 	[ApiVersionNeutral]
-	public class AuthenticationController(IUserRepository userRepository, ApiResponse apiResponse) : ControllerBase
+	public class AuthenticationController(IUserRepository userRepository, ApiResponse apiResponse, IEmailServivce emailServivce) : ControllerBase
 	{
 		private readonly IUserRepository _userRepository = userRepository;
 
@@ -25,9 +26,17 @@ namespace MagicVilla_VillaAPI.Controllers
 					_apiResponse.IsSuccess = false;
 					return BadRequest(_apiResponse);
 				}
+				// Send Confirmation Email
+				if (!await emailServivce.SendConfirmEmailAsync(dto.Email, dto.UserName, user.ConfirmationCode!))
+				{
+					_apiResponse.StatusCode = HttpStatusCode.BadRequest;
+					_apiResponse.IsSuccess = false;
+					_apiResponse.Errors.Add("Failed to send confirmation email");
+					return BadRequest(_apiResponse);
+				}
 				_apiResponse.StatusCode = HttpStatusCode.OK;
 				_apiResponse.IsSuccess = true;
-				_apiResponse.Result = user.User;
+				_apiResponse.Result = "Registration is Done,Confirmation email is sent to your email";
 				return Ok(_apiResponse);
 			}
 			_apiResponse.StatusCode = HttpStatusCode.BadRequest;
@@ -45,6 +54,13 @@ namespace MagicVilla_VillaAPI.Controllers
 				_apiResponse.StatusCode = HttpStatusCode.BadRequest;
 				_apiResponse.IsSuccess = false;
 				_apiResponse.Errors.Add("User Name or password is incorrect");
+				return BadRequest(_apiResponse);
+			}
+			if (response.AccessToken is null && response.RefreshToken is null)
+			{
+				_apiResponse.StatusCode = HttpStatusCode.BadRequest;
+				_apiResponse.IsSuccess = false;
+				_apiResponse.Errors.Add("Email is not confirmed");
 				return BadRequest(_apiResponse);
 			}
 			_apiResponse.StatusCode = HttpStatusCode.OK;
@@ -83,6 +99,30 @@ namespace MagicVilla_VillaAPI.Controllers
 			_apiResponse.StatusCode = HttpStatusCode.OK;
 			_apiResponse.IsSuccess = true;
 			_apiResponse.Result = "Token Revoked";
+			return Ok(_apiResponse);
+		}
+
+		[HttpPost("Confirm-Email")]
+		public async Task<ActionResult<ApiResponse>> ConfirmEmail([FromBody] ConfirmEmailDto dto)
+		{
+			if (string.IsNullOrEmpty(dto.Email) || string.IsNullOrEmpty(dto.Token))
+			{
+				_apiResponse.StatusCode = HttpStatusCode.BadRequest;
+				_apiResponse.IsSuccess = false;
+				_apiResponse.Errors.Add("Email and Token are required");
+				return BadRequest(_apiResponse);
+			}
+			var result = await _userRepository.ConfirmEmailAsync(dto.Email, dto.Token);
+			if (!result)
+			{
+				_apiResponse.StatusCode = HttpStatusCode.BadRequest;
+				_apiResponse.IsSuccess = false;
+				_apiResponse.Errors.Add("Invalid Email or Token");
+				return BadRequest(_apiResponse);
+			}
+			_apiResponse.StatusCode = HttpStatusCode.OK;
+			_apiResponse.IsSuccess = true;
+			_apiResponse.Result = "Email Confirmed Successfully";
 			return Ok(_apiResponse);
 		}
 	}

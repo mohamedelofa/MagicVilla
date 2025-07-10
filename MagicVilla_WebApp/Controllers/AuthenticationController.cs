@@ -135,5 +135,26 @@ namespace MagicVilla_WebApp.Controllers
 		{
 			return View();
 		}
+
+
+		public async Task<IActionResult> ConfirmEmail(string email, string token)
+		{
+			if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(token))
+			{
+				TempData["Error"] = "Invalid email or token";
+				return RedirectToAction(nameof(LogIn));
+			}
+			var response = await _authenticationService.ConfirmEmailAsync(email, token);
+			if (response.IsSuccess)
+			{
+				TempData["Success"] = "Email confirmed successfully";
+				return RedirectToAction(nameof(LogIn));
+			}
+			else
+			{
+				TempData["Error"] = response.Errors.FirstOrDefault() ?? "Error confirming email";
+				return RedirectToAction(nameof(LogIn));
+			}
+		}
 	}
 }

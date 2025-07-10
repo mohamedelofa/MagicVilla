@@ -39,7 +39,19 @@ namespace MagicVilla_VillaAPI
 			builder.Services.AddScoped<IUserRepository, UserRepository>();
 			builder.Services.AddScoped<ICacheService, CacheService>();
 			builder.Services.AddScoped<ApiResponse>();
-			builder.Services.AddIdentity<ApplicationUser, IdentityRole>().AddEntityFrameworkStores<AppDbContext>();
+			builder.Services.AddScoped<IEmailServivce, EmailService>();
+			builder.Services.Configure<MailJetSettings>(builder.Configuration.GetSection("MailJet") ?? throw new InvalidOperationException("Error in MailJet settings"));
+			builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
+			{
+				options.SignIn.RequireConfirmedAccount = true;
+				options.Tokens.EmailConfirmationTokenProvider = "EmailConfirmation"; //TokenOptions.DefaultEmailProvider;
+			}).AddEntityFrameworkStores<AppDbContext>()
+			.AddDefaultTokenProviders()
+			.AddTokenProvider<DataProtectorTokenProvider<ApplicationUser>>("EmailConfirmation");
+			builder.Services.Configure<DataProtectionTokenProviderOptions>("EmailConfirmation", options =>
+			{
+				options.TokenLifespan = TimeSpan.FromHours(3);  // token valid for 3 hours
+			});
 
 			builder.Services.AddAuthentication(options =>
 			{
@@ -59,7 +71,8 @@ namespace MagicVilla_VillaAPI
 									  ClockSkew = TimeSpan.Zero
 								  };
 
-							  });
+							  }
+			);
 
 			builder.Services.AddControllers();
 			// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

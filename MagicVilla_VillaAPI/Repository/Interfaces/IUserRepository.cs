@@ -7,5 +7,6 @@
 		Task<RegisterResponseDto?> Register(RegisterRequestDto dto);
 		Task<TokenDto> RefreshTokenAsync(TokenDto tokenDto);
 		Task<bool> RevokeToken(string refreshToken);
+		Task<bool> ConfirmEmailAsync(string email, string token);
 	}
 }

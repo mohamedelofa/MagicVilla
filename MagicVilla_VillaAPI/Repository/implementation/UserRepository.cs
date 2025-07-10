@@ -1,5 +1,6 @@
 ﻿
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.IdentityModel.Tokens;
 using System.Data;
 using System.IdentityModel.Tokens.Jwt;
@@ -33,6 +34,15 @@ namespace MagicVilla_VillaAPI.Repository.implementation
 			if (user is null) return null;
 			bool isValid = await _userManager.CheckPasswordAsync(user, dto.Password);
 			if (!isValid) return null;
+			// Check if user is confirmed
+			if (!await _userManager.IsEmailConfirmedAsync(user))
+			{
+				return new LogInResponseDto()
+				{
+					AccessToken = null,
+					RefreshToken = null
+				};
+			}
 			var jwtTokenId = $"JTI{Guid.NewGuid().ToString()}";
 			// Generate JWT Access Token
 			var accessToken = await GetAccessTokenAsync(user, jwtTokenId);
@@ -60,10 +70,12 @@ namespace MagicVilla_VillaAPI.Repository.implementation
 					}
 					if (_userManager.AddToRoleAsync(user, dto.Role).Result.Succeeded)
 					{
+						var confirmEmailCode = await GenerateConfirmEmailCodeAsync(user);
 						transaction.Commit();
 						return new RegisterResponseDto()
 						{
-							User = _mapper.Map<UserDto>(user)
+							User = _mapper.Map<UserDto>(user),
+							ConfirmationCode = confirmEmailCode,
 						};
 					}
 					else
@@ -108,7 +120,8 @@ namespace MagicVilla_VillaAPI.Repository.implementation
 
 		public async Task<bool> RevokeToken(string refreshToken)
 		{
-			var existingRefreshToken = _context.RefreshTokens.FirstOrDefault(x => x.Token == refreshToken);
+			var decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(refreshToken));
+			var existingRefreshToken = _context.RefreshTokens.FirstOrDefault(x => x.Token == decodedToken);
 			if (existingRefreshToken is null) return false;
 			await MarkTokenAsInvalid(existingRefreshToken);
 			return true;
@@ -206,5 +219,21 @@ namespace MagicVilla_VillaAPI.Repository.implementation
 			await _context.SaveChangesAsync();
 		}
 
+		private async Task<string> GenerateConfirmEmailCodeAsync(ApplicationUser user)
+		{
+			return await _userManager.GenerateEmailConfirmationTokenAsync(user);
+		}
+
+		public async Task<bool> ConfirmEmailAsync(string email, string token)
+		{
+			var user = await _userManager.FindByEmailAsync(email);
+			if (user is null)
+			{
+				return false;
+			}
+			var decodetoken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+			var result = await _userManager.ConfirmEmailAsync(user, decodetoken);
+			return result.Succeeded;
+		}
 	}
 }

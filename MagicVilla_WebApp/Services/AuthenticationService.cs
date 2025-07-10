@@ -17,6 +17,17 @@ namespace MagicVilla_WebApp.Services
 			_tokenService = tokenService;
 			_url = $"{_configuration.GetValue<string>("ServiceUrls:VillaAPI")}/api/{StaticDetails.Version}/Authentication";
 		}
+
+		public async Task<ApiResponse?> ConfirmEmailAsync(string email, string token)
+		{
+			return await _consumeService.SendAsync(new ApiRequest
+			{
+				Url = $"{_url}/Confirm-Email",
+				Data = new { Email = email, Token = token },
+				apiType = StaticDetails.ApiType.POST
+			}, needToken: false);
+		}
+
 		public async Task<ApiResponse?> LogIn(LogInRequestDto dto)
 		{
 			return await _consumeService.SendAsync(new ApiRequest
